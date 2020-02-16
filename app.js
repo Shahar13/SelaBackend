@@ -10,6 +10,7 @@ const bcrypt = require('bcryptjs');
 const fs = require('fs');
 const path = require('path');
 
+
 // uploads with multer
 const multer = require('multer');
 const UPLOAD_IMAGES_PATH = '/public/uploads/img';

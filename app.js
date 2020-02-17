@@ -10,7 +10,6 @@ const bcrypt = require('bcryptjs');
 const fs = require('fs');
 const path = require('path');
 
-
 // uploads with multer
 const multer = require('multer');
 const UPLOAD_IMAGES_PATH = '/public/uploads/img';
@@ -190,7 +189,12 @@ app.post('/register', upload.single('userPicture'), async function (req, res, ne
     }
 });
 
-
+app.post('/newPost', async function (req, res, next) {
+    console.log("newPost ==> ");
+    // console.log(req.body.userData);
+    console.log(req.body);
+    
+})
 console.log('backend/app.js');
 
 module.exports = app;

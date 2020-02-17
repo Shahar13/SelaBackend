@@ -133,17 +133,30 @@ app.post('/user', function (req, res) {
 
 // registration of new user
 app.post('/register', upload.single('userPicture'), async function (req, res, next) {
-    console.log('/uploadImage req.file ==> ');
-    // need to insert the NEW image file name with its extention png/jpg/gif etc
+    console.log('/register ==> ');
+    // need to insert the NEW image file name with its original extention png/jpg/gif etc
     let _file = req.file;
     let _body = req.body;   
     let _reqUserData = JSON.parse(req.body.userData);
 
-    // extract image NEW name and extention
-   let imageExt = /[^/]*$/.exec(req.file.mimetype)[0];
+    // extract image NEW name and original extention
+    let imageExt = /[^/]*$/.exec(req.file.mimetype)[0];
+    let _imageUniqueName = req.file.filename + '.' + imageExt;
+    // console.log(_imageUniqueName);
 
-   let _imageUniqueName = req.file.filename + '.' + imageExt;
-   console.log(_imageUniqueName);
+    //encrypt pwd
+    //1. add Sult pre-string to the original pwd
+    //2. concat original pwd to the Sult
+    const salt = await bcrypt.genSalt(10);
+    const _encrypt_pwd = await bcrypt.hash(_reqUserData.userPassword, salt);
+    // decode
+    // bcrypt.compare(userPassword, hashStringFromDB);
+
+    // // Compare passwords
+    // const comparePWD = (password1, password2) => {
+    //     // Compare two passwords
+    //     return bcrypt.compareSync(password1, password2);
+    // };
 
     try {
         pool = await poolPromise;
@@ -151,12 +164,10 @@ app.post('/register', upload.single('userPicture'), async function (req, res, ne
         // .query(`INSERT INTO Users (Name, Email, Password, ImageSrc, DateOFBirth, WorkAddress, isAdmin) 
         //         VALUES ('aaaaa', 'aaaa@gmail.com', 'aaaaaaa', 'aaaa.png', '1910-10-10', 'Being pappy', 0)
         // `)
-
-        console.log(JSON.parse(req.body.userData));
         
         request.input('Name', _reqUserData.userName);
         request.input('Email', _reqUserData.userEmail);
-        request.input('Password', _reqUserData.userPassword);
+        request.input('Password', _encrypt_pwd);
         request.input('ImageSrc', _imageUniqueName);
         request.input('DateOfBirth', _reqUserData.userBirth);
         request.input('WorkAddress', _reqUserData.userWorkAddress);
@@ -171,7 +182,6 @@ app.post('/register', upload.single('userPicture'), async function (req, res, ne
         });
         
     } catch (error) {
-        
         // message: 'INSERT_NEW_USER_USERS FAIL!!!',
         res.status(500).json({
             message: error.message,

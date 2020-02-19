@@ -113,23 +113,6 @@ app.post('/user', function (req, res) {
 
 //////////////////////////////////////////////////
 /////// REGISTRATION 
-// image upload
-// app.post('/uploadImage', upload.single('userPicture'), (req, res) => {
-//     if(req.body) {
-//         let imageExt = /[^/]*$/.exec(req.file.mimetype)[0];
-
-//         console.log('/uploadImage req.file ==> ');
-//         console.log(req.file.filename + '.' + imageExt);
-//         let _imageUniqueName = req.file.filename + '.' + imageExt;
-
-//         res.status(200).json({
-//             message: 'uploade succeed!',
-//             imageUniqueName: _imageUniqueName,
-//         })
-//     }
-//     else throw 'error';
-// });
-
 // registration of new user
 app.post('/register', upload.single('userPicture'), async function (req, res, next) {
     console.log('/register ==> ');
@@ -146,8 +129,7 @@ app.post('/register', upload.single('userPicture'), async function (req, res, ne
     //encrypt pwd
     //1. add Sult pre-string to the original pwd
     //2. concat original pwd to the Sult
-    const salt = await bcrypt.genSalt(10);
-    const _encrypt_pwd = await bcrypt.hash(_reqUserData.userPassword, salt);
+    const _encrypt_pwd = await bcrypt.hash(_reqUserData.userPassword);
     // decode
     // bcrypt.compare(userPassword, hashStringFromDB);
 
@@ -189,10 +171,49 @@ app.post('/register', upload.single('userPicture'), async function (req, res, ne
     }
 });
 
-app.post('/newPost', async function (req, res, next) {
-    console.log("newPost ==> ");
-    // console.log(req.body.userData);
-    console.log(req.body);
+app.post('/newPost', upload.single('postPicture'), async function (req, res, next) {
+    console.log("newPost ==> ");    
+    // need to insert the NEW image file name with its original extention png/jpg/gif etc
+    let _file = req.file;
+    let _body = req.body;   
+    let _reqUserData = JSON.parse(req.body.userData);
+
+    // extract image NEW name and original extention
+    let imageExt = /[^/]*$/.exec(req.file.mimetype)[0];
+    let _imageUniqueName = req.file.filename + '.' + imageExt;
+    // console.log(_imageUniqueName);
+    
+    try {
+        pool = await poolPromise;
+        request = await pool.request()
+        .query(`INSERT INTO Posts (UserId, Date, ImageSrc, Title, Content, LocationId) 
+                VALUES ('1234', '1910-10-10', '${_imageUniqueName}', 'TITLE', 'CONTENT', '123345')
+        `)
+        
+        // request.input('Name', _reqUserData.userName);
+        // request.input('Email', _reqUserData.userEmail);
+        // request.input('Password', _encrypt_pwd);
+        // request.input('ImageSrc', _imageUniqueName);
+        // request.input('DateOfBirth', _reqUserData.userBirth);
+        // request.input('WorkAddress', _reqUserData.userWorkAddress);
+        // request.input('IsAdmin', _reqUserData.userIsAdmin);
+
+        // // stored procedure exec - INSERT_NEW_USER_USERS
+        // request.execute('INSERT_NEW_USER_USERS');
+        
+        res.status(200).json({
+            message: 'INSERT_NEW_POST_POSTS successfully',
+            data: res,
+        });
+        // data: request.recordset,
+        
+    } catch (error) {
+        // message: 'INSERT_NEW_USER_USERS FAIL!!!',
+        res.status(500).json({
+            message: error.message,
+            error: error,
+        });
+    }
     
 })
 console.log('backend/app.js');
